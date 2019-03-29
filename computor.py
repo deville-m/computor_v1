@@ -32,17 +32,29 @@ def parse_expr(expr):
 
         try:
             coef = int(groups[0])
-        except:
+        except ValueError:
             coef = float(groups[0])
         try:
             exponent = int(groups[1])
             if exponent < 0:
                 raise
-        except:
+        except ValueError:
             usage("The exponent {} must be an non-negative integer")
         res[exponent] = res.get(exponent, 0) + coef
 
     return res
+
+
+def sqrt(nb):
+    if int(nb) == nb:
+        nb = int(nb)
+        for i in range(nb // 2 + 1):
+            if i * i == nb:
+                return i
+    x_n = 1
+    for x in range(10):
+        x_n = 0.5 * (x_n + (nb / x_n))
+    return x_n
 
 
 def print_reduced(reduced):
@@ -71,13 +83,13 @@ def solve(reduced):
 
     if discriminant > 0:
         print("Discriminant is strictly positive, the two solutions are:")
-        print((-coefs[1] + discriminant ** 0.5)/(2 * coefs[0]))
-        print((-coefs[1] - discriminant ** 0.5)/(2 * coefs[0]))
+        print((-coefs[1] + sqrt(discriminant))/(2 * coefs[0]))
+        print((-coefs[1] - sqrt(discriminant))/(2 * coefs[0]))
     elif discriminant == 0:
         print("Discriminant is equal to zero, the solution is:")
         print(-coefs[1]/(2 * coefs[0]))
     else:
-        imaginary = (-discriminant) ** 0.5 / (2 * coefs[0])
+        imaginary = sqrt(-discriminant) / (2 * coefs[0])
         if imaginary < 0:
             imaginary = -imaginary
         print("Discriminant is negative, the two complex solutions are:")
