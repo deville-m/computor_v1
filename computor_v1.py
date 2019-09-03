@@ -24,7 +24,7 @@ def usage(msg):
     sys.exit(1)
 
 def transform(lst):
-    res = [0, 0, 0]
+    res = dict()
     for elem in lst:
         matches = re.findall(r"-?\d+(?:\.\d+)?", elem)
         try:
@@ -32,30 +32,29 @@ def transform(lst):
         except ValueError:
             coef = float(matches[0])
         exp = int(matches[1])
-        if exp > 2 or exp < 0:
-            raise ParseError("Exponent must be between 0 and 2, this is not quadratic", elem)
-        res[exp] = coef
+        res[exp] = coef if exp not in res else coef + res[exp]
     return res
 
-def print_reduced(lst):
+def print_reduced(expr):
     def to_str(coef, exp):
         return str(abs(coef)) + " * X^" + str(exp)
-    maxi = -1
-    if all(not e for e in lst):
+    if all(not v for v in expr.values()):
         print("Everything is a solution.")
-        return maxi
+        return False
     s = ""
-    for i in range(len(lst)):
-        if lst[i]:
+    for k, v in expr.items():
+        if v:
             if not s:
-                s += " " if lst[i] > 0 else " - "
+                s += " " if v > 0 else " - "
             else:
-                s += " + " if lst[i] > 0 else " - "
-            s += to_str(lst[i], i)
-            maxi = i
+                s += " + " if v > 0 else " - "
+            s += to_str(v, k)
     s += " = 0"
     print("Reduced form:" + s)
-    return maxi
+    for i in range(3):
+        if i not in expr:
+            expr[i] = 0
+    return True
 
 def parse_expr(expr):
     expr = expr.replace(" ", "")
@@ -65,13 +64,11 @@ def parse_expr(expr):
     left, right = tuple(expr.split("="))
     left = re.findall(FULL_TERM, left)
     right = re.findall(FULL_TERM, right)
-    try:
-        left = transform(left)
-        right =  transform(right)
-    except ParseError as e:
-        raise e
-    reduced = [a - b for a, b in zip(left, right)]
-    return reduced
+    left = transform(left)
+    right =  transform(right)
+    for k, v in right.items():
+        left[k] -= v
+    return left
 
 def sqrt(nb):
     if int(nb) == nb:
@@ -92,7 +89,7 @@ def second_degree(expr):
         else:
             print(i, "* i")
 
-    c, b, a = tuple(expr)
+    c, b, a = expr[0], expr[1], expr[2]
     discr = b * b - 4 * a * c
     if discr < 0:
         print("Discriminant is strictly negative, the two solutions are:")
@@ -112,17 +109,22 @@ def second_degree(expr):
         x = -b / (2 * a)
 
 def eval_expr(expr):
-    degree = print_reduced(expr)
-    if degree == -1:
+    if not print_reduced(expr):
         return
+    degree = -1
+    for k, v in expr.items():
+        if v and k > degree:
+            degree = k
     print("Polynomial degree:", degree)
     if degree == 0:
         print("There is no solution.")
     elif degree == 1:
         print("There is one solution:")
         print(-expr[0]/expr[1])
-    else:
+    elif degree == 2:
         second_degree(expr)
+    else:
+        print("The polynomial degree is strictly greater than 2, I can't solve.".format(degree))
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
