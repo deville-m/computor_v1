@@ -67,6 +67,8 @@ def parse_expr(expr):
     left = transform(left)
     right =  transform(right)
     for k, v in right.items():
+        if k not in left:
+            left[k] = 0
         left[k] -= v
     return left
 
