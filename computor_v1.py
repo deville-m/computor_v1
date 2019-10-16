@@ -109,6 +109,7 @@ def second_degree(expr):
     else:
         print("Discriminant is zero, the solution is:")
         x = -b / (2 * a)
+        print(x)
 
 def eval_expr(expr):
     if not print_reduced(expr):
